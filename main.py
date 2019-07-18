@@ -2,6 +2,7 @@ import logging
 from sqlalchemy import create_engine
 from datetime import datetime, timedelta
 from os.path import join, realpath, abspath, dirname
+import pandas as pd
 
 try:
     approot = dirname(abspath(__file__))
@@ -22,13 +23,26 @@ class db_interaction:
 
     @staticmethod
     def convert2dt(uts: int):
+        if not uts:
+            return None
         return datetime(1970, 1, 1) + timedelta(seconds=uts)
+
+    def resultProxy2dicts(self, rp):
+        l = []
+        for r in rp:
+            l.append({})
+            for k in r.keys():
+                if k == 'START' or k == 'END':
+                    l[-1][k] = self.convert2dt(r[k])
+                else:
+                    l[-1][k] = r[k]
+        return l
 
     def get_all_from_table(self, tablemane: str):
         connection = self.engine.connect()
         sqlcmd = "select * from {}".format(tablemane)
         result = connection.execute(sqlcmd)
-        data = [r for r in result]
+        data = self.resultProxy2dicts(result)
         connection.close()
         return data
 
@@ -69,24 +83,59 @@ class db_interaction:
         connection = self.engine.connect()
         sqlcmd = "select ID, DESCRIPTION, START from TIMESHEET where END is NULL;"
         result = connection.execute(sqlcmd)
-        data = [dict(id=r.ID,
-                     description=r.DESCRIPTION,
-                     start=self.convert2dt(r.START)) for r in result]
+        data = self.resultProxy2dicts(result)
         connection.close()
+        return data
+
+    def get_entries(self):
+        connection = self.engine.connect()
+        sqlcmd = "select c.name CUSTOMER, t.name TYPE, ts.DESCRIPTION, p.name PROJECT, c.name CUSTOMER, ts.START, ts.END " \
+                 "from TIMESHEET ts, PROJECT p, TYPE t, CUSTOMER c " \
+                 "where p.ID=ts.PROJECT " \
+                 "and t.ID=ts.TYPE " \
+                 "and c.ID=ts.CUSTOMER;"
+
+        result = connection.execute(sqlcmd)
+        data = self.resultProxy2dicts(result)
+        connection.close()
+
         return data
 
 
 def cre_table_str(l: list):
     s = ''
     for d in l:
-        if 'id' in d:
-            s += '[{id}]'
+        if 'ID' in d:
+            s += '[{ID}]'
         for k in d.keys():
-            if k != 'id':
-                s += '  +  {'+k+'}'
+            if k != 'ID':
+                s += '  +  {' + k + '}'
         s += '\n'
         s = s.format(**d)
     return s
+
+
+def getxls(l: list):
+    for d in l:
+        d['DATE']=d['START'].strftime('%d.%m.%Y')
+        d['START']=d['START'].strftime('%H:%M')
+        d['END'] = d['END'].strftime('%H:%M') if d['END'] else ''
+
+    outfil=join(approot, '{}-output.xlsx'.format(datetime.now().strftime('%Y%m%d%H%M%S')))
+    with pd.ExcelWriter(outfil) as writer:
+        pd.DataFrame(l).to_excel(writer, sheet_name="all")
+    return outfil
+
+
+def check_num_inp(s: str):
+    try:
+        i = int(s)
+        return i
+    except Exception:
+        if s == '':
+            return None
+        else:
+            return False
 
 
 if __name__ == "__main__":
@@ -101,21 +150,32 @@ if __name__ == "__main__":
         if i == '1':
             print('following projects are available')
             print(cre_table_str(db.get_projects()))
-            project = int(input('enter project id: '))
+            project = check_num_inp(input('enter project id: '))
+            if project == False:
+                print('wrong entry')
+                continue
             print('following customers are available')
             print(cre_table_str(db.get_customer()))
-            customer = int(input('enter customer id: '))
-
+            customer = check_num_inp(input('enter customer id: '))
+            if customer == False | customer == None:
+                print('wrong entry')
+                continue
             print('following types are available')
-            print(db.get_types())
+            print(cre_table_str(db.get_types()))
             type = int(input('enter type id: '))
-
+            if type == False | type == None:
+                print('wrong entry')
+                continue
             description = input('insert description')
 
             id = db.start_tacking(customer=customer, type=type, description=description, project=project)
-        if i == '2':
+        elif i == '2':
             print(cre_table_str(db.get_open_entries()))
             id = int(input('enter entry id: '))
             db.stop_tacking(id)
+        elif i == '3':
+            data=db.get_entries()
+            print(cre_table_str(data))
+            print(getxls(data))
         else:
             print('value not valid')
