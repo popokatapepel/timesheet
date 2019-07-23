@@ -3,6 +3,9 @@ from sqlalchemy import create_engine
 from datetime import datetime, timedelta
 from os.path import join, realpath, abspath, dirname
 import pandas as pd
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy.orm import relationship, sessionmaker
 
 try:
     approot = dirname(abspath(__file__))
@@ -12,10 +15,111 @@ except NameError:  # We are the main py2exe script, not a module
     approot = dirname(abspath(sys.argv[0]))
 
 
+Base=declarative_base()
+
+class Customer(Base):
+    __tablename__='CUSTOMER'
+
+    id=Column(Integer, primary_key=True)
+    name=Column(String)
+    abbreviation=Column(String)
+
+    actions = relationship("Action", back_populates='customer')
+
+    def __repr__(self):
+        return f'<{self.name}>'
+
+
+class Project(Base):
+    __tablename__ = 'PROJECT'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+    description = Column(String)
+
+    actions = relationship ("Action", back_populates = 'project')
+
+    def __repr__(self):
+        return f'<{self.name}>'
+
+class Type(Base):
+    __tablename__='TYPE'
+
+    id=Column(Integer, primary_key=True)
+    name=Column(String)
+    actions = relationship("Action", back_populates='type')
+
+    def __repr__(self):
+        return f'<{self.name}>'
+
+class Action(Base):
+    __tablename__ = 'ACTION'
+
+    id = Column(Integer, primary_key=True)
+    description = Column(String)
+
+    project_id = Column(Integer, ForeignKey('PROJECT.id'))
+    customer_id = Column(Integer, ForeignKey('CUSTOMER.id'))
+    type_id = Column(Integer, ForeignKey('TYPE.id'))
+
+    project = relationship("Project", back_populates="actions")
+    customer = relationship("Customer", back_populates="actions")
+    type = relationship("Type", back_populates="actions")
+    start = Column(DateTime)
+    end = Column(DateTime)
+
+    def __repr__(self):
+        return f'<{self.name}>'
+
+
+
 class db_interaction:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
-        self.engine = create_engine("sqlite:///{}".format(join(approot, 'app.db')))
+        self.engine = create_engine("sqlite:///abc.db".format(join(approot, 'app.db')),echo=True)
+        Base.metadata.create_all(self.engine)
+        self.session=sessionmaker(bind=self.engine)
+
+        #initiale daten
+
+        c1=Customer(abbreviation='DA', name='thyssenkrupp Bilstein GmbH')
+        self.insert_customer('DA', 'thyssenkrupp Bilstein GmbH')
+        self.insert_customer('CT', 'thyssenkrupp Components Technologies')
+        self.insert_customer('SP', 'thyssenkrupp Springs and Stabilizers')
+
+        p1=Project(name='ST-3970', description='working with old models')
+
+        self.insert_project(name='ST-3628',description='Creating advance versions')
+
+        self.insert_type('Arbeitsweg')
+        self.insert_type('Administration')
+
+        self.insert_action(description='abcde', start=datetime.now(), customer=c1, project=p1)
+
+    def insert_customer(self,abbrev, name=''):
+        c=Customer(name=name,abbreviation=abbrev)
+        s=self.session()
+        s.add(c)
+        s.commit()
+
+    def insert_project(self,description, name):
+        c=Project(name=name,description=description)
+        s=self.session()
+        s.add(c)
+        s.commit()
+
+    def insert_type(self, name):
+        c=Type(name=name)
+        s=self.session()
+        s.add(c)
+        s.commit()
+
+    def insert_action(self,**kwargs):
+        c=Action(**kwargs)
+        s=self.session()
+        s.add(c)
+        s.commit()
+
 
     @staticmethod
     def convert2uts(dt: datetime):
