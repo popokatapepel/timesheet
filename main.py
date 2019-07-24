@@ -99,12 +99,12 @@ class Action(Base):
 
 
 class db_interaction:
-    def __init__(self):
+    def __init__(self, db_file=join(approot, 'app.db')):
         self.logger = logging.getLogger(__name__)
-        if not isfile(join(approot, 'app.db')):
+        if not isfile(db_file):
             import init_data
-            init_data.import_data(join(approot, 'app.db'))
-        self.engine = create_engine("sqlite:///{}".format(join(approot, 'app.db')), echo=True)
+            init_data.import_data(db_file)
+        self.engine = create_engine("sqlite:///{}".format(db_file), echo=False)
         self.session = sessionmaker(bind=self.engine)()
 
     def insert_customer(self, abbrev, name=''):
@@ -171,13 +171,15 @@ class db_interaction:
 
 
 def getxls(od: OrderedDict):
-    l = [dict(date=od[k].start.strftime('%d.%m.%Y'),
-              start=od[k].start.strftime('%H:%M'),
-              end=od[k].end.strftime('%H:%M') if od[k].end else '',
-              project=od[k].project.name,
-              customer=od[k].customer.abbreviation,
-              type=od[k].type.name)
-         for k in od]
+    l=[]
+    for k in od:
+        l.append({})
+        l[-1]['date']=od[k].start.strftime('%d.%m.%Y')
+        l[-1]['start']=od[k].start.strftime('%H:%M')
+        l[-1]['end']=od[k].end.strftime('%H:%M') if od[k].end else ''
+        l[-1]['project']=od[k].project.name if od[k].project else ''
+        l[-1]['type']=od[k].type.name
+        l[-1]['customer']=od[k].customer.abbreviation
 
     outfil = join(approot, '{}-output.xlsx'.format(datetime.now().strftime('%Y%m%d%H%M%S')))
     with pd.ExcelWriter(outfil) as writer:

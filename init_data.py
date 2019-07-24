@@ -6,7 +6,7 @@ from main import *
 
 
 def import_data(dbfile):
-    engine = create_engine("sqlite:///{}".format(dbfile), echo=True)
+    engine = create_engine("sqlite:///{}".format(dbfile), echo=False)
     Base.metadata.create_all(engine)
     session = sessionmaker(bind=engine)()
     session.add_all(
