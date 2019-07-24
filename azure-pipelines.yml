@@ -1,20 +1,22 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
 # https://aka.ms/yaml
+jobs:
+- job: 'Test'
+  pool:
+    vmImage: 'ubuntu-16.04' # other options: 'macOS-10.13', 'vs2017-win2016'
+  strategy:
+    matrix:
+      Python27:
+        python.version: '2.7'
+      Python35:
+        python.version: '3.5'
+      Python36:
+        python.version: '3.6'
 
-trigger:
-- master
-
-pool:
-  vmImage: 'ubuntu-latest'
-
-steps:
-- script: | 
-    sudo apt-get install python3
-    pip3 install -r requirements.txt
-  displayName: 'Preparing System'
-
-- script: pytest test_timesheet.py
-  displayName: 'Run Tests'
-
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(python.version)'
+      
+ - script: pip install -r requirements.txt
+  displayName: 'Install requirements'
+      
