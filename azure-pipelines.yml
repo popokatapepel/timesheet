@@ -23,5 +23,5 @@ steps:
 - script: |
     pip install pytest
     pip install pytest-cov
-    pytest test_timesheet --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
+    pytest test_timesheet.py --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
   displayName: 'Test with pytest'
