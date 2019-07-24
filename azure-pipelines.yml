@@ -10,6 +10,13 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
+- script: |
+    sudo apt-get update 
+    sudo apt-get install python
+    sudo apt-get upgrade
+    pip install requirements.txt
+  displayName: 'Preparing System'
+
 - script: echo Hello, world!
   displayName: 'Run a one-line script'
 
