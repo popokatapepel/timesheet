@@ -6,13 +6,6 @@ class TestTimesheet(TestCase):
     def test_db_init(self):
         db=db_interaction()
 
-    def test_convert_uts(self):
-        db = db_interaction()
-        dt=datetime.now()
-        uts=db.convert2uts(dt)
-        dt1=db.convert2dt(uts)
-        self.assertEqual(dt1,dt)
-
     def test_get_projects(self):
         db = db_interaction()
         db.get_projects()
@@ -23,16 +16,21 @@ class TestTimesheet(TestCase):
 
     def test_get_customer(self):
         db = db_interaction()
-        db.get_customer()
+        db.get_customers()
 
     def test_start_tracking(self):
         db = db_interaction()
-        db.start_tacking(1,2)
+        c=db.get_customers()[0]
+        p = db.get_projects()[0]
+        t = db.get_types()[0]
+        db.start_tacking(customer=c,type=t,description='xxx',project=p)
+        db.start_tacking(customer=c, type=t, description='xxx')
+        db.start_tacking(customer=c, type=t)
 
     def test_stop_tracking(self):
         db = db_interaction()
-        i=db.start_tacking(1, 2)
-        db.stop_tacking(i)
+        a=db.get_open_entries()[0]
+        db.stop_tacking(a)
 
     def test_get_open_entries(self):
         db=db_interaction()
@@ -41,7 +39,4 @@ class TestTimesheet(TestCase):
     def test_get_entries(self):
         db=db_interaction()
         db.get_entries()
-
-
-
 

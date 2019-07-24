@@ -1,3 +1,6 @@
 [1] neue Zeiterfassung
 [2] enddatum pflegen
 [3] get entries
+[4] create new customer
+[5] create new project
+[6] create new type
