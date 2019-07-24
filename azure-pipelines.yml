@@ -11,9 +11,9 @@ pool:
 
 steps:
 - script: | 
-    sudo apt-get install python
-    pip install --upgrade pip
-    pip install -r requirements.txt
+    sudo apt-get install python3
+    pip3 install --upgrade pip
+    pip3 install -r requirements.txt
   displayName: 'Preparing System'
 
 - script: pytest test_timesheet.py
