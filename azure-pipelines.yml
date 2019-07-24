@@ -12,13 +12,10 @@ pool:
 steps:
 - script: | 
     sudo apt-get install python
+    pip install --upgrade pip
     pip install -r requirements.txt
   displayName: 'Preparing System'
 
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+- script: pytest test_timesheet.py
+  displayName: 'Run Tests'
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
