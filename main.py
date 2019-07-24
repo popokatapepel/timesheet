@@ -243,5 +243,16 @@ if __name__ == "__main__":
         elif i == '3':
             data = db.get_entries()
             print(getxls(data))
+        elif i=='4':
+            abbrev=input('Insert abbreviation for customer: ')
+            name = input('Insert name for customer: ')
+            db.insert_customer(abbrev=abbrev, name=name)
+        elif i=='5':
+            name = input('Insert abbreviation for project: ')
+            description = input('Insert project description: ')
+            db.insert_project(name=name, description=description)
+        elif i=='6':
+            name=input('Insert a name for the new type: ')
+            db.insert_type(name=name)
         else:
             print('value not valid')
