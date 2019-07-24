@@ -205,7 +205,7 @@ if __name__ == "__main__":
     loop = True
     while loop:
         print('-' * 20)
-        with open('menu\main.txt') as f:
+        with open(join('menu', 'main.txt')) as f:
             print(f.read())
         i = input('choose option: ')
         if i == '1':
