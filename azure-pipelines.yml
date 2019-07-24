@@ -1,26 +1,24 @@
-- job:
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
 
-  pool:
-    vmImage: 'ubuntu-16.04'
-  strategy:
-    matrix:
-      Python27:
-        python.version: '2.7'
-      Python35:
-        python.version: '3.5'
-      Python36:
-        python.version: '3.6'
-      Python37:
-        python.version: '3.7'
+trigger:
+- master
 
-  steps:
-  - task: UsePythonVersion@0
-    displayName: 'Use Python $(python.version)'
-    inputs:
-      versionSpec: '$(python.version)'
+pool:
+  vmImage: 'ubuntu-latest'
 
-  - script: pip install tox
-    displayName: 'Install Tox'
+steps:
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.6'
+ 
+- script: python -m pip install --upgrade pip setuptools wheel
+  displayName: 'Install tools'
 
-  - script: tox -e py
-    displayName: 'Run Tox'
+- script: pip install -r requirements.txt
+  displayName: 'Install requirements'
+
+- script: pytest test_timesheet.py
+  displayName: 'Run Tests'
