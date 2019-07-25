@@ -25,3 +25,18 @@ steps:
     pip install pytest-cov
     pytest test_timesheet.py --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
   displayName: 'Test with pytest'
+  
+- task: PublishTestResults@2
+  displayName: 'Publish Test Results **/test-results.xml'
+  inputs:
+    testResultsFiles: '**/test-results.xml'
+    testRunTitle: 'Python $(python.version)'
+  condition: succeededOrFailed()
+  
+- task: PublishCodeCoverageResults@1
+  displayName: 'Publish code coverage from coverage.xml'
+  inputs:
+    codeCoverageTool: Cobertura
+    summaryFileLocation: coverage.xml
+  condition: succeededOrFailed()
+
